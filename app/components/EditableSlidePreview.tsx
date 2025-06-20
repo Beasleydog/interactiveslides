@@ -6,14 +6,9 @@ import decodeToHTML from "@/app/helpers/decodeToHTML";
 
 interface SlidePreviewProps {
   htmlContent: string;
-  slideNumber: number;
 }
 
-export default function SlidePreview({
-  htmlContent,
-  slideNumber,
-}: SlidePreviewProps) {
-  const [scale, setScale] = useState(1);
+export default function SlidePreview({ htmlContent }: SlidePreviewProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
   const [processedHtmlContent, setProcessedHtmlContent] = useState<string>("");
@@ -138,8 +133,8 @@ export default function SlidePreview({
       // Convert HTML to key text objects
       const keyTextObjectInfo = await htmlToKeyTextObjects(htmlContent);
       const keyTextObjects = keyTextObjectInfo.objects;
-      setSlideWidth(keyTextObjectInfo.slideWidth);
-      setSlideHeight(keyTextObjectInfo.slideHeight);
+      setSlideWidth(keyTextObjectInfo.slideWidth || 0);
+      setSlideHeight(keyTextObjectInfo.slideHeight || 0);
 
       // Convert key text objects back to HTML
       const decodedHtml = decodeToHTML(keyTextObjects);

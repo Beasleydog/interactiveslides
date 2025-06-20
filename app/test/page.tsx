@@ -73,7 +73,7 @@ export default function TestPage() {
           </p>
         </div>
         <div className="border border-gray-300 rounded-lg overflow-hidden bg-white h-[calc(100vh-120px)]">
-          <EditableSlidePreview htmlContent={htmlContent} slideNumber={1} />
+          <EditableSlidePreview htmlContent={htmlContent} />
         </div>
       </div>
     </div>

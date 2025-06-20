@@ -15,8 +15,8 @@ interface KeyTextObject {
 }
 
 interface ChildStyle {
-  [key: string]: string | ChildStyle[];
   children?: ChildStyle[];
+  [key: string]: string | ChildStyle[] | undefined;
 }
 
 export default function decodeToHTML(data: KeyTextObject[]): string {
@@ -44,7 +44,8 @@ export default function decodeToHTML(data: KeyTextObject[]): string {
     if (item.style) {
       for (const prop in item.style) {
         if (item.style.hasOwnProperty(prop)) {
-          element.style[prop] = item.style[prop];
+          (element.style as unknown as Record<string, string>)[prop] =
+            item.style[prop];
         }
       }
     }
@@ -103,7 +104,8 @@ function applyStylesToChildren(
         if (childStyle.hasOwnProperty(prop) && prop !== "children") {
           const value = childStyle[prop];
           if (typeof value === "string") {
-            (childElement.style as any)[prop] = value;
+            (childElement.style as unknown as Record<string, string>)[prop] =
+              value;
           }
         }
       }

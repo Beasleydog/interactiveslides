@@ -1,9 +1,38 @@
 import getKeyStyles from "./getKeyStyles";
 
-const cache = new Map<string, any>();
-export default function htmlToKeyTextObjects(html: string): Promise<any> {
+interface KeyTextObject {
+  text: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  innerHTML: string;
+  className: string;
+  tagName: string;
+  id: string;
+  style: Record<string, string>;
+  attributes: NamedNodeMap;
+  childrenStyles: ChildStyle[];
+  fromBackground: boolean;
+}
+
+interface ChildStyle {
+  children?: ChildStyle[];
+  [key: string]: string | ChildStyle[] | undefined;
+}
+
+interface ReturnObject {
+  objects: KeyTextObject[];
+  slideWidth: number | undefined;
+  slideHeight: number | undefined;
+}
+
+const cache = new Map<string, ReturnObject>();
+export default function htmlToKeyTextObjects(
+  html: string
+): Promise<ReturnObject> {
   if (cache.has(html)) {
-    return cache.get(html);
+    return Promise.resolve(cache.get(html)!);
   }
 
   // Create an iframe element
@@ -19,12 +48,16 @@ export default function htmlToKeyTextObjects(html: string): Promise<any> {
   iframe.srcdoc = html;
 
   // Wait for iframe to load and then process the content
-  return new Promise<any>((resolve) => {
+  return new Promise<ReturnObject>((resolve) => {
     iframe.onload = () => {
       try {
         const doc = iframe.contentDocument;
         if (!doc) {
-          resolve([]);
+          resolve({
+            objects: [],
+            slideWidth: undefined,
+            slideHeight: undefined,
+          });
           return;
         }
 
@@ -46,13 +79,13 @@ export default function htmlToKeyTextObjects(html: string): Promise<any> {
             ...new Set(
               allElements
                 .map((x) => serializedInfo(x, keyTextObjects))
-                .filter(Boolean)
+                .filter((x): x is KeyTextObject => x !== null)
             ),
           ];
 
           const firstElementOfIframe = iframe.contentDocument?.body.children[0];
 
-          const returnObject = {
+          const returnObject: ReturnObject = {
             objects: result,
             slideWidth: firstElementOfIframe?.getBoundingClientRect().width,
             slideHeight: firstElementOfIframe?.getBoundingClientRect().height,
@@ -66,7 +99,7 @@ export default function htmlToKeyTextObjects(html: string): Promise<any> {
       } catch (error) {
         console.error("Error processing HTML in iframe:", error);
         // document.body.removeChild(iframe);
-        resolve([]);
+        resolve({ objects: [], slideWidth: undefined, slideHeight: undefined });
       }
     };
   });
@@ -77,10 +110,11 @@ function getAllElementsWithBackground(element: Element): Element[] {
 
   // Check if current element has background color
   const style = getComputedStyle(element);
-  const hasBackground =
+  const hasBackground: boolean = !!(
     style.backgroundColor &&
     style.backgroundColor !== "rgba(0, 0, 0, 0)" &&
-    style.backgroundColor !== "transparent";
+    style.backgroundColor !== "transparent"
+  );
 
   if (hasBackground) {
     elements.push(element);
@@ -143,7 +177,7 @@ function highestSameTextParent(textNode: Node): Node {
   return currentNode;
 }
 
-function serializedInfo(node: Node, keyTexts: Node[]) {
+function serializedInfo(node: Node, keyTexts: Node[]): KeyTextObject | null {
   // Only call getBoundingClientRect on Element objects
   if (node.nodeType !== Node.ELEMENT_NODE) {
     return null; // Skip non-element nodes
@@ -157,14 +191,15 @@ function serializedInfo(node: Node, keyTexts: Node[]) {
   keyTexts.forEach((x) => {
     cleanText = cleanText?.replace(x.textContent || "", "").trim();
   });
-  let hasTextContent = cleanText && cleanText.length > 0;
+  const hasTextContent = cleanText && cleanText.length > 0;
 
   // Check if this element has background color
   const style = getComputedStyle(element);
-  const hasBackground =
+  const hasBackground: boolean = !!(
     style.backgroundColor &&
     style.backgroundColor !== "rgba(0, 0, 0, 0)" &&
-    style.backgroundColor !== "transparent";
+    style.backgroundColor !== "transparent"
+  );
 
   // If element only has background (no text content), set innerHTML to empty
   const innerHTML =
@@ -192,7 +227,7 @@ function serializedInfo(node: Node, keyTexts: Node[]) {
 }
 
 function getChildrenStyles(node: Node) {
-  const childrenStyles: any[] = [];
+  const childrenStyles: ChildStyle[] = [];
 
   // Recursively process all child nodes
   for (const child of node.childNodes) {

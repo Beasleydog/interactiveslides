@@ -9,17 +9,20 @@ interface SlidePreviewProps {
   editable?: boolean;
 }
 
+interface HTMLIFrameElementWithCleanup extends HTMLIFrameElement {
+  cleanupListeners?: () => void;
+}
+
 export default function SlidePreview({
   htmlContent,
   slideNumber,
   onContentChange,
   editable = true,
 }: SlidePreviewProps) {
-  const [scale, setScale] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
   const parentRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeRef = useRef<HTMLIFrameElementWithCleanup>(null);
 
   // Function to extract background color from HTML content
   const extractBackgroundColor = (html: string): string => {
@@ -173,7 +176,7 @@ export default function SlidePreview({
             };
 
             // Store cleanup function on iframe for later use
-            (iframe as any).cleanupListeners = cleanup;
+            iframe.cleanupListeners = cleanup;
           }
         }
       }, 0); // Small delay to ensure content is rendered
@@ -193,8 +196,8 @@ export default function SlidePreview({
       clearTimeout(timer);
 
       // Clean up event listeners if they exist
-      if ((iframe as any).cleanupListeners) {
-        (iframe as any).cleanupListeners();
+      if (iframe.cleanupListeners) {
+        iframe.cleanupListeners();
       }
     };
   }, [htmlContent, onContentChange, editable]);

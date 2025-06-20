@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 export default function Load() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const loadSharedData = async () => {
-      const id = searchParams.get("id");
+      // Get id from URL manually
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
 
       if (!id) {
         setError("No share ID provided");
@@ -52,7 +52,7 @@ export default function Load() {
 
             // Redirect to slides page
             window.location.href = "/slides";
-          } catch (parseError) {
+          } catch {
             throw new Error("Invalid shared data format");
           }
         } else {
@@ -67,7 +67,7 @@ export default function Load() {
     };
 
     loadSharedData();
-  }, [searchParams]);
+  }, []);
 
   if (loading) {
     return (
