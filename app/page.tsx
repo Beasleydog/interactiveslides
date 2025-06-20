@@ -432,7 +432,8 @@ export default function Home() {
       if (response.ok) {
         const shareUrl = `${window.location.origin}/load?id=${shareCode}`;
         const userInput = window.prompt(
-          `Share this URL with others:\n\n${shareUrl}\n\nCopy the URL above and share it!`
+          `Heres the link to your slideshow`,
+          shareUrl
         );
 
         if (userInput) {
