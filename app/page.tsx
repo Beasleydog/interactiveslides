@@ -5,6 +5,7 @@ import getHighLevelPlan, { Slide } from "./ai/getHighLevelPlan";
 import getSlideHTML from "./ai/getSlideHTML";
 import editSlideHTML from "./ai/editSlideHTML";
 import SlidePreview from "./components/SlidePreview";
+import { navigateTo, getShareUrl } from "./utils/urlUtils";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -399,7 +400,7 @@ export default function Home() {
   };
 
   const handleViewSlides = () => {
-    window.location.href = "/slides";
+    navigateTo("/slides");
   };
 
   const handleShare = async () => {
@@ -430,7 +431,7 @@ export default function Home() {
       );
 
       if (response.ok) {
-        const shareUrl = `${window.location.origin}/load?id=${shareCode}`;
+        const shareUrl = getShareUrl(shareCode);
         const userInput = window.prompt(
           `Heres the link to your slideshow`,
           shareUrl

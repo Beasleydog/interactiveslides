@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import SlidePreview from "../components/SlidePreview";
 import { Slide } from "../ai/getHighLevelPlan";
+import { navigateTo } from "../utils/urlUtils";
 
 export default function SlidesDisplay() {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -142,7 +143,7 @@ export default function SlidesDisplay() {
     localStorage.removeItem("savedPrompt");
 
     // Redirect to editor
-    window.location.href = "/";
+    navigateTo("");
   };
 
   if (loading) {
@@ -226,7 +227,7 @@ export default function SlidesDisplay() {
               New Slideshow
             </button>
             <button
-              onClick={() => (window.location.href = "/")}
+              onClick={() => navigateTo("")}
               className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
             >
               Back to Editor

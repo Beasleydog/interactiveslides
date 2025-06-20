@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { navigateTo } from "../utils/urlUtils";
 
 export default function Load() {
   const [loading, setLoading] = useState(true);
@@ -51,7 +52,7 @@ export default function Load() {
             }
 
             // Redirect to slides page
-            window.location.href = "/slides";
+            navigateTo("/slides");
           } catch {
             throw new Error("Invalid shared data format");
           }
@@ -91,7 +92,7 @@ export default function Load() {
           </div>
           <div className="text-gray-700 mb-6">{error}</div>
           <button
-            onClick={() => (window.location.href = "/")}
+            onClick={() => navigateTo("")}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
             Back to Editor
