@@ -91,6 +91,13 @@ export default function SlidesDisplay() {
       } else {
         enterFullscreen();
       }
+    } else if (e.key === "e" || e.key === "E") {
+      // Check for Ctrl+Alt+Shift+E combination
+      if (e.ctrlKey && e.altKey && e.shiftKey) {
+        e.preventDefault();
+        console.log("Going back to editor"); // Debug log
+        navigateTo("");
+      }
     }
   };
 
@@ -135,16 +142,6 @@ export default function SlidesDisplay() {
       window.removeEventListener("message", handleMessage);
     };
   }, [currentSlideIndex, isFullscreen]);
-
-  const handleNewSlideshow = () => {
-    // Clear localStorage
-    localStorage.removeItem("slidesData");
-    localStorage.removeItem("slideHTMLsData");
-    localStorage.removeItem("savedPrompt");
-
-    // Redirect to editor
-    navigateTo("");
-  };
 
   if (loading) {
     return (
@@ -219,18 +216,6 @@ export default function SlidesDisplay() {
               className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded transition-colors"
             >
               Fullscreen (F)
-            </button>
-            <button
-              onClick={handleNewSlideshow}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
-            >
-              New Slideshow
-            </button>
-            <button
-              onClick={() => navigateTo("")}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
-            >
-              Back to Editor
             </button>
           </div>
         </div>
