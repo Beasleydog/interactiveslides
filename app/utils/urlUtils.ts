@@ -1,5 +1,5 @@
 // Utility functions for handling URLs in different environments
-// GitHub Pages: https://beasleydog.github.io/aislides
+// GitHub Pages: https://beasleydog.github.io/interactiveslides
 // Local: https://localhost:3000
 
 export const getBaseUrl = (): string => {
@@ -7,7 +7,7 @@ export const getBaseUrl = (): string => {
   const isGitHubPages = window.location.hostname === "beasleydog.github.io";
 
   if (isGitHubPages) {
-    return "https://beasleydog.github.io/aislides";
+    return "https://beasleydog.github.io/interactiveslides";
   } else {
     // Local development
     return window.location.origin;
@@ -18,7 +18,7 @@ export const getRelativeUrl = (path: string): string => {
   const baseUrl = getBaseUrl();
 
   if (baseUrl.includes("github.io")) {
-    // GitHub Pages - path should start with /aislides
+    // GitHub Pages - path should start with /interactiveslides
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
     return `${baseUrl}${cleanPath}`;
   } else {

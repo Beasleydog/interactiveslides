@@ -1,10 +1,11 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: "/interactiveslides",
   output: "export",
-  basePath: "/aislides",
   trailingSlash: true,
   images: {
     unoptimized: true,
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
