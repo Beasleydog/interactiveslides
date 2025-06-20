@@ -1,11 +1,9 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  output: "export", // Enable static exports for GitHub Pages
-  basePath: "/aislides", // Replace with your actual repository name
-  trailingSlash: true, // Recommended for static exports
+const nextConfig = {
+  output: "export",
+  basePath: "/aislides",
+  trailingSlash: true,
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
   },
 };
 
