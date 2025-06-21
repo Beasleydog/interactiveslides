@@ -484,7 +484,6 @@ export default function Home() {
                   </label>
                   <input
                     id="apiKey"
-                    type="password"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     placeholder="Enter your Gemini API key..."
