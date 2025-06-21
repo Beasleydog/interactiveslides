@@ -32,6 +32,14 @@ export default function Home() {
     [key: number]: boolean;
   }>({});
 
+  // New state for side-by-side edit comparison
+  const [editPreviewMode, setEditPreviewMode] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [tempEditHTMLs, setTempEditHTMLs] = useState<{ [key: number]: string }>(
+    {}
+  );
+
   // New state for slide insertion
   const [showInsertInput, setShowInsertInput] = useState<number | null>(null);
   const [insertInput, setInsertInput] = useState("");
@@ -108,6 +116,8 @@ export default function Home() {
     setInsertingSlideIndex(null);
     setOriginalHTMLs({});
     setShowDenyButton({});
+    setEditPreviewMode({});
+    setTempEditHTMLs({});
 
     // Reset form to default values
     setPrompt("");
@@ -193,11 +203,12 @@ export default function Home() {
         apiKey
       );
 
-      setSlideHTMLs((prev) => ({ ...prev, [slideNumber]: newHTML }));
-      setEditInputs((prev) => ({ ...prev, [slideNumber]: "" }));
+      // Store the new HTML temporarily instead of applying it immediately
+      setTempEditHTMLs((prev) => ({ ...prev, [slideNumber]: newHTML }));
+      // Don't clear the edit input - keep it for potential modifications
 
-      // Show deny button after successful edit
-      setShowDenyButton((prev) => ({ ...prev, [slideNumber]: true }));
+      // Show preview mode for side-by-side comparison
+      setEditPreviewMode((prev) => ({ ...prev, [slideNumber]: true }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to edit slide");
     } finally {
@@ -225,6 +236,48 @@ export default function Home() {
     setShowDenyButton((prev) => ({ ...prev, [slideNumber]: false }));
 
     // Clear the original HTML from memory
+    setOriginalHTMLs((prev) => {
+      const newState = { ...prev };
+      delete newState[slideNumber];
+      return newState;
+    });
+  };
+
+  const handleAcceptEdit = (slideNumber: number) => {
+    // Apply the temporary edit to the main slide HTMLs
+    if (tempEditHTMLs[slideNumber]) {
+      setSlideHTMLs((prev) => ({
+        ...prev,
+        [slideNumber]: tempEditHTMLs[slideNumber],
+      }));
+    }
+
+    // Clear the edit input when accepting
+    setEditInputs((prev) => ({ ...prev, [slideNumber]: "" }));
+
+    // Exit preview mode and clean up
+    setEditPreviewMode((prev) => ({ ...prev, [slideNumber]: false }));
+    setTempEditHTMLs((prev) => {
+      const newState = { ...prev };
+      delete newState[slideNumber];
+      return newState;
+    });
+    setOriginalHTMLs((prev) => {
+      const newState = { ...prev };
+      delete newState[slideNumber];
+      return newState;
+    });
+  };
+
+  const handleRejectEdit = (slideNumber: number) => {
+    // Exit preview mode and clean up without applying changes
+    // Keep the edit input so user can modify it and try again
+    setEditPreviewMode((prev) => ({ ...prev, [slideNumber]: false }));
+    setTempEditHTMLs((prev) => {
+      const newState = { ...prev };
+      delete newState[slideNumber];
+      return newState;
+    });
     setOriginalHTMLs((prev) => {
       const newState = { ...prev };
       delete newState[slideNumber];
@@ -696,70 +749,139 @@ export default function Home() {
                       editingSlides[slide.number] ? "opacity-50" : "opacity-100"
                     }`}
                   >
-                    <div
-                      className={`${
-                        editingSlides[slide.number] ? "animate-pulse" : ""
-                      }`}
-                    >
-                      <SlidePreview
-                        htmlContent={slideHTMLs[slide.number]}
-                        slideNumber={slide.number}
-                        onContentChange={handleContentChange}
-                        editable={slide.type !== "Interactive"}
-                      />
-                    </div>
+                    {editPreviewMode[slide.number] ? (
+                      // Side-by-side comparison view
+                      <div className="space-y-4">
+                        <div className="text-center mb-4">
+                          <h4 className="text-lg font-semibold text-gray-800">
+                            Edit Preview
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            Compare the original with your edit
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          {/* Original version */}
+                          <div className="border-2 border-gray-200 rounded-lg p-2">
+                            <div className="text-center mb-2">
+                              <span className="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                                Original
+                              </span>
+                            </div>
+                            <SlidePreview
+                              htmlContent={originalHTMLs[slide.number]}
+                              slideNumber={slide.number}
+                              onContentChange={() => {}} // Read-only in preview
+                              editable={false}
+                            />
+                          </div>
+
+                          {/* Edited version */}
+                          <div className="border-2 border-blue-200 rounded-lg p-2">
+                            <div className="text-center mb-2">
+                              <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded">
+                                Edited
+                              </span>
+                            </div>
+                            <SlidePreview
+                              htmlContent={tempEditHTMLs[slide.number]}
+                              slideNumber={slide.number}
+                              onContentChange={() => {}} // Read-only in preview
+                              editable={false}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Accept/Reject buttons */}
+                        <div className="flex justify-center gap-4 pt-4">
+                          <button
+                            onClick={() => handleAcceptEdit(slide.number)}
+                            className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Accept Edit
+                          </button>
+                          <button
+                            onClick={() => handleRejectEdit(slide.number)}
+                            className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            Reject Edit
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Normal view
+                      <div
+                        className={`${
+                          editingSlides[slide.number] ? "animate-pulse" : ""
+                        }`}
+                      >
+                        <SlidePreview
+                          htmlContent={slideHTMLs[slide.number]}
+                          slideNumber={slide.number}
+                          onContentChange={handleContentChange}
+                          editable={slide.type !== "Interactive"}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Minimal Edit Section */}
                   <div className="px-4 pb-4">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={editInputs[slide.number] || ""}
-                        onChange={(e) =>
-                          setEditInputs((prev) => ({
-                            ...prev,
-                            [slide.number]: e.target.value,
-                          }))
-                        }
-                        onKeyPress={(e) => handleKeyPress(e, slide.number)}
-                        placeholder="Edit this slide..."
-                        className="flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 text-sm"
-                        disabled={editingSlides[slide.number]}
-                      />
-                      <button
-                        onClick={() => handleEditSlide(slide.number)}
-                        disabled={
-                          !editInputs[slide.number]?.trim() ||
-                          editingSlides[slide.number]
-                        }
-                        className="bg-blue-600 text-white px-3 py-2 rounded font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
-                      >
-                        {editingSlides[slide.number] ? "..." : "Edit"}
-                      </button>
-                      {showDenyButton[slide.number] && (
+                    {!editPreviewMode[slide.number] && (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={editInputs[slide.number] || ""}
+                          onChange={(e) =>
+                            setEditInputs((prev) => ({
+                              ...prev,
+                              [slide.number]: e.target.value,
+                            }))
+                          }
+                          onKeyPress={(e) => handleKeyPress(e, slide.number)}
+                          placeholder="Edit this slide..."
+                          className="flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 text-sm"
+                          disabled={editingSlides[slide.number]}
+                        />
                         <button
-                          onClick={() => handleDenyEdit(slide.number)}
-                          className="bg-gray-500 text-white px-3 py-2 rounded font-medium hover:bg-gray-600 transition-colors text-sm flex items-center gap-1"
-                          title="Revert to original"
+                          onClick={() => handleEditSlide(slide.number)}
+                          disabled={
+                            !editInputs[slide.number]?.trim() ||
+                            editingSlides[slide.number]
+                          }
+                          className="bg-blue-600 text-white px-3 py-2 rounded font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                            />
-                          </svg>
-                          Undo
+                          {editingSlides[slide.number] ? "..." : "Edit"}
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
