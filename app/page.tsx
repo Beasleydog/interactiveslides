@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import getHighLevelPlan, { Slide } from "./ai/getHighLevelPlan";
 import getSlideHTML from "./ai/getSlideHTML";
 import editSlideHTML from "./ai/editSlideHTML";
+import generateCustomSlide from "./ai/generateCustomSlide";
 import SlidePreview from "./components/SlidePreview";
 import { navigateTo, getShareUrl } from "./utils/urlUtils";
 
@@ -276,23 +277,17 @@ export default function Home() {
     setError("");
 
     try {
-      // Create a new slide object
-      const newSlide: Slide = {
-        number: insertAfterIndex + 2, // Will be inserted after the current slide
-        title: `Custom Slide`,
-        type: "Informative",
-        purpose: description,
-        contentOutline: [description],
-        visualIdea: "Clean, simple layout with the described content",
-        relationToOthers: "Custom slide inserted by user",
-      };
-
-      // Generate HTML for the new slide
-      const html = await getSlideHTML(newSlide, [...slides, newSlide], apiKey);
+      // Use the new function to generate both slide data and HTML
+      const result = await generateCustomSlide(
+        description,
+        insertAfterIndex,
+        slides,
+        apiKey
+      );
 
       // Insert the new slide at the specified position
       const newSlides = [...slides];
-      newSlides.splice(insertAfterIndex + 1, 0, newSlide);
+      newSlides.splice(insertAfterIndex + 1, 0, result.slide);
 
       // Update slide numbers to maintain order
       const updatedSlides = newSlides.map((slide, index) => ({
@@ -320,7 +315,7 @@ export default function Home() {
       });
 
       // Add the new slide's HTML at the correct position
-      updatedSlideHTMLs[insertAfterIndex + 2] = html;
+      updatedSlideHTMLs[insertAfterIndex + 2] = result.html;
 
       // Update edit inputs with new numbering
       const updatedEditInputs: { [key: number]: string } = {};
