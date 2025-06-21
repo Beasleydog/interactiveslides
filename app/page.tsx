@@ -24,6 +24,14 @@ export default function Home() {
     [key: number]: boolean;
   }>({});
 
+  // New state for tracking original HTML before edits
+  const [originalHTMLs, setOriginalHTMLs] = useState<{ [key: number]: string }>(
+    {}
+  );
+  const [showDenyButton, setShowDenyButton] = useState<{
+    [key: number]: boolean;
+  }>({});
+
   // New state for slide insertion
   const [showInsertInput, setShowInsertInput] = useState<number | null>(null);
   const [insertInput, setInsertInput] = useState("");
@@ -98,6 +106,8 @@ export default function Home() {
     setInsertInput("");
     setInsertingSlide(false);
     setInsertingSlideIndex(null);
+    setOriginalHTMLs({});
+    setShowDenyButton({});
 
     // Reset form to default values
     setPrompt("");
@@ -169,6 +179,12 @@ export default function Home() {
     setError("");
 
     try {
+      // Save the original HTML before editing
+      setOriginalHTMLs((prev) => ({
+        ...prev,
+        [slideNumber]: slideHTMLs[slideNumber],
+      }));
+
       const newHTML = await editSlideHTML(
         slide,
         slides,
@@ -179,6 +195,9 @@ export default function Home() {
 
       setSlideHTMLs((prev) => ({ ...prev, [slideNumber]: newHTML }));
       setEditInputs((prev) => ({ ...prev, [slideNumber]: "" }));
+
+      // Show deny button after successful edit
+      setShowDenyButton((prev) => ({ ...prev, [slideNumber]: true }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to edit slide");
     } finally {
@@ -191,6 +210,26 @@ export default function Home() {
       e.preventDefault();
       handleEditSlide(slideNumber);
     }
+  };
+
+  const handleDenyEdit = (slideNumber: number) => {
+    // Revert to original HTML
+    if (originalHTMLs[slideNumber]) {
+      setSlideHTMLs((prev) => ({
+        ...prev,
+        [slideNumber]: originalHTMLs[slideNumber],
+      }));
+    }
+
+    // Hide deny button
+    setShowDenyButton((prev) => ({ ...prev, [slideNumber]: false }));
+
+    // Clear the original HTML from memory
+    setOriginalHTMLs((prev) => {
+      const newState = { ...prev };
+      delete newState[slideNumber];
+      return newState;
+    });
   };
 
   const handleContentChange = (slideNumber: number, newHtmlContent: string) => {
@@ -698,6 +737,28 @@ export default function Home() {
                       >
                         {editingSlides[slide.number] ? "..." : "Edit"}
                       </button>
+                      {showDenyButton[slide.number] && (
+                        <button
+                          onClick={() => handleDenyEdit(slide.number)}
+                          className="bg-gray-500 text-white px-3 py-2 rounded font-medium hover:bg-gray-600 transition-colors text-sm flex items-center gap-1"
+                          title="Revert to original"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                            />
+                          </svg>
+                          Undo
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
