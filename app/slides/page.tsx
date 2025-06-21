@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import SlidePreview from "../components/SlidePreview";
 import { Slide } from "../ai/getHighLevelPlan";
 import { navigateTo } from "../utils/urlUtils";
@@ -32,19 +32,19 @@ export default function SlidesDisplay() {
     setLoading(false);
   }, []);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     if (currentSlideIndex < slides.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1);
     }
-  };
+  }, [currentSlideIndex, slides.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     if (currentSlideIndex > 0) {
       setCurrentSlideIndex(currentSlideIndex - 1);
     }
-  };
+  }, [currentSlideIndex]);
 
-  const enterFullscreen = async () => {
+  const enterFullscreen = useCallback(async () => {
     if (fullscreenRef.current) {
       try {
         await fullscreenRef.current.requestFullscreen();
@@ -53,53 +53,54 @@ export default function SlidesDisplay() {
         console.error("Error entering fullscreen:", error);
       }
     }
-  };
+  }, []);
 
-  const exitFullscreen = async () => {
-    if (document.fullscreenElement) {
-      try {
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) {
         await document.exitFullscreen();
-        setIsFullscreen(false);
-      } catch (error) {
-        console.error("Error exiting fullscreen:", error);
       }
+      setIsFullscreen(false);
+    } catch (error) {
+      console.error("Error exiting fullscreen:", error);
     }
-  };
+  }, []);
 
-  const handleKeyPress = (e: KeyboardEvent) => {
-    console.log("Key pressed:", e.key, "Fullscreen:", isFullscreen); // Debug log
-
-    if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      console.log("Next slide"); // Debug log
-      nextSlide();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      console.log("Previous slide"); // Debug log
-      prevSlide();
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      if (isFullscreen) {
-        exitFullscreen();
-      } else {
-        window.history.back();
-      }
-    } else if (e.key === "f" || e.key === "F") {
-      e.preventDefault();
-      if (isFullscreen) {
-        exitFullscreen();
-      } else {
-        enterFullscreen();
-      }
-    } else if (e.key === "e" || e.key === "E") {
-      // Check for Ctrl+Alt+Shift+E combination
-      if (e.ctrlKey && e.altKey && e.shiftKey) {
+  const handleKeyPress = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
         e.preventDefault();
-        console.log("Going back to editor"); // Debug log
-        navigateTo("");
+        console.log("Next slide"); // Debug log
+        nextSlide();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        console.log("Previous slide"); // Debug log
+        prevSlide();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        if (isFullscreen) {
+          exitFullscreen();
+        } else {
+          window.history.back();
+        }
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        if (isFullscreen) {
+          exitFullscreen();
+        } else {
+          enterFullscreen();
+        }
+      } else if (e.key === "e" || e.key === "E") {
+        // Check for Ctrl+Alt+Shift+E combination
+        if (e.ctrlKey && e.altKey && e.shiftKey) {
+          e.preventDefault();
+          console.log("Going back to editor"); // Debug log
+          navigateTo("");
+        }
       }
-    }
-  };
+    },
+    [nextSlide, prevSlide, isFullscreen, exitFullscreen, enterFullscreen]
+  );
 
   // Listen for fullscreen change events
   useEffect(() => {
@@ -141,7 +142,15 @@ export default function SlidesDisplay() {
       window.removeEventListener("keydown", handleKeyPress);
       window.removeEventListener("message", handleMessage);
     };
-  }, [currentSlideIndex, isFullscreen]);
+  }, [
+    currentSlideIndex,
+    isFullscreen,
+    handleKeyPress,
+    nextSlide,
+    prevSlide,
+    exitFullscreen,
+    enterFullscreen,
+  ]);
 
   if (loading) {
     return (

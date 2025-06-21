@@ -1,5 +1,5 @@
 import getGeminiResponse from "./getGeminiResponse";
-import { Slide } from "./getHighLevelPlan";
+import { Slide, SlideType } from "./getHighLevelPlan";
 
 export interface CustomSlideResult {
   slide: Slide;
@@ -100,7 +100,7 @@ function parseCustomSlideResponse(
   const slide: Slide = {
     number: slideNumber,
     title: extractField(slideDataText, "Title"),
-    type: extractField(slideDataText, "Type") as any,
+    type: extractField(slideDataText, "Type") as SlideType,
     purpose: extractField(slideDataText, "Purpose"),
     contentOutline: extractField(slideDataText, "Content Outline").split(", "),
     visualIdea: extractField(slideDataText, "Visual Idea"),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface SlidePreviewProps {
   htmlContent: string;
@@ -120,7 +120,7 @@ export default function SlidePreview({
   };
 
   // Function to handle content changes in the iframe
-  const handleContentChange = () => {
+  const handleContentChange = useCallback(() => {
     const iframe = iframeRef.current;
     if (!iframe || !iframe.contentDocument || !onContentChange) return;
 
@@ -140,7 +140,7 @@ export default function SlidePreview({
     } catch (error) {
       console.warn("Error handling content change:", error);
     }
-  };
+  }, [onContentChange, slideNumber, htmlContent]);
 
   useEffect(() => {
     setIsVisible(false);
@@ -200,7 +200,7 @@ export default function SlidePreview({
         iframe.cleanupListeners();
       }
     };
-  }, [htmlContent, onContentChange, editable]);
+  }, [htmlContent, onContentChange, editable, handleContentChange]);
 
   useEffect(() => {
     // Handle window resize
