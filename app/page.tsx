@@ -28,9 +28,6 @@ export default function Home() {
   const [originalHTMLs, setOriginalHTMLs] = useState<{ [key: number]: string }>(
     {}
   );
-  const [showDenyButton, setShowDenyButton] = useState<{
-    [key: number]: boolean;
-  }>({});
 
   // New state for side-by-side edit comparison
   const [editPreviewMode, setEditPreviewMode] = useState<{
@@ -115,7 +112,6 @@ export default function Home() {
     setInsertingSlide(false);
     setInsertingSlideIndex(null);
     setOriginalHTMLs({});
-    setShowDenyButton({});
     setEditPreviewMode({});
     setTempEditHTMLs({});
 
@@ -221,26 +217,6 @@ export default function Home() {
       e.preventDefault();
       handleEditSlide(slideNumber);
     }
-  };
-
-  const handleDenyEdit = (slideNumber: number) => {
-    // Revert to original HTML
-    if (originalHTMLs[slideNumber]) {
-      setSlideHTMLs((prev) => ({
-        ...prev,
-        [slideNumber]: originalHTMLs[slideNumber],
-      }));
-    }
-
-    // Hide deny button
-    setShowDenyButton((prev) => ({ ...prev, [slideNumber]: false }));
-
-    // Clear the original HTML from memory
-    setOriginalHTMLs((prev) => {
-      const newState = { ...prev };
-      delete newState[slideNumber];
-      return newState;
-    });
   };
 
   const handleAcceptEdit = (slideNumber: number) => {
