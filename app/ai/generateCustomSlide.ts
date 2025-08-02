@@ -17,7 +17,7 @@ export default async function generateCustomSlide(
     insertAfterIndex,
     allSlides
   );
-  const response = await getGeminiResponse(prompt, apiKey);
+  const response = await getGeminiResponse(prompt, apiKey,model="gemini-2.5-pro");
 
   // Parse the response to extract both slide data and HTML
   const result = parseCustomSlideResponse(response, insertAfterIndex + 2);
