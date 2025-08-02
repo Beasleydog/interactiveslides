@@ -7,7 +7,7 @@ export default async function getSlideHTML(
   apiKey: string
 ): Promise<string> {
   const prompt = buildSlideHTMLPrompt(slide, allSlides);
-  const response = await getGeminiResponse(prompt, apiKey);
+  const response = await getGeminiResponse(prompt, apiKey,model="gemini-2.5-pro");
 
   // Extract the HTML from the response (remove markdown code blocks if present)
   const htmlMatch = response.match(/```html\s*([\s\S]*?)\s*```/);
